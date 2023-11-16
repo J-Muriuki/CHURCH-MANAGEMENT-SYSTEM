@@ -190,22 +190,77 @@ public class ViewMembers extends JFrame {
 		contentPane.add(SearchTextField);
 		SearchTextField.setColumns(10);
 		
-		JButton btnNewButton_3 = new JButton("Search");
-		btnNewButton_3.addActionListener(new ActionListener() {
+		JButton editbtn = new JButton("Edit");
+		editbtn.setFont(new Font("Verdana", Font.BOLD, 11));
+		editbtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String searchText = SearchTextField.getText().trim();
-		        if (!searchText.isEmpty()) {
-		            DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-		            TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
-		            table.setRowSorter(sorter);
+				int selectedRow = table.getSelectedRow();
 
-		            RowFilter<DefaultTableModel, Object> rowFilter = RowFilter.regexFilter("(?i)" + searchText);
-		            sorter.setRowFilter(rowFilter);
-		        }
+			    if (selectedRow != -1) {
+			        // Retrieve data from the selected row
+			        String no = (String) table.getValueAt(selectedRow, 0);
+			        String name = (String) table.getValueAt(selectedRow, 1);
+			        String age = (String) table.getValueAt(selectedRow, 2);
+			        String contact = (String) table.getValueAt(selectedRow, 3);
+
+			        // Create a dialog for editing
+			        JPanel editPanel = new JPanel();
+			        JTextField nameField = new JTextField(name);
+			        JTextField ageField = new JTextField(age);
+			        JTextField contactField = new JTextField(contact);
+
+			        editPanel.add(new JLabel("Name:"));
+			        editPanel.add(nameField);
+			        editPanel.add(new JLabel("Age:"));
+			        editPanel.add(ageField);
+			        editPanel.add(new JLabel("Contact:"));
+			        editPanel.add(contactField);
+
+			        int result = JOptionPane.showConfirmDialog(null, editPanel,
+			                "Edit Member", JOptionPane.OK_CANCEL_OPTION);
+
+			        if (result == JOptionPane.OK_OPTION) {
+			            // Update the table
+			            table.setValueAt(nameField.getText(), selectedRow, 1);
+			            table.setValueAt(ageField.getText(), selectedRow, 2);
+			            table.setValueAt(contactField.getText(), selectedRow, 3);
+
+			            // Update the database
+			            try {
+			                Class.forName("com.mysql.cj.jdbc.Driver");
+			                Connection connection = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/stmarysmanagement",
+			                        "LordJames", "#Jamesisaguru254");
+			                Statement st = connection.createStatement();
+
+			                // Construct the UPDATE SQL query
+			                String query = "UPDATE youth SET name='" + nameField.getText() + "', age='" + ageField.getText() +
+			                        "', Contact='" + contactField.getText() + "' WHERE Youth_Id='" + no + "'";
+
+			                // Execute the query to update the row in the database
+			                int rowsAffected = st.executeUpdate(query);
+
+			                if (rowsAffected > 0) {
+			                    JOptionPane.showMessageDialog(null, "Member Updated");
+			                } else {
+			                    JOptionPane.showMessageDialog(null, "Update Failed");
+			                }
+
+			                connection.close();
+			            } catch (ClassNotFoundException | SQLException e12) {
+			                e12.printStackTrace();
+			            }
+			        }
+			    } else {
+			        JOptionPane.showMessageDialog(null, "No Member selected");
+			    }
 			}
-		});
-		btnNewButton_3.setBounds(219, 39, 97, 23);
-		contentPane.add(btnNewButton_3);
+
+		
+		}
+			
+		);
+		editbtn.setBounds(219, 39, 97, 23);
+		contentPane.add(editbtn);
 		
 		JButton btnNewButton_4 = new JButton("Delete");
 		btnNewButton_4.addActionListener(new ActionListener() {
@@ -261,7 +316,7 @@ public class ViewMembers extends JFrame {
 	                    model.removeRow(selectedRow);
 	                    JOptionPane.showMessageDialog(contentPane, "Member Removed");
 	                } else {
-	                    JOptionPane.showMessageDialog(contentPane, "Failed to delete member");
+	                    JOptionPane.showMessageDialog(contentPane, "Failed to Remove member");
 	                }
 
 	                connection.close();
@@ -270,7 +325,8 @@ public class ViewMembers extends JFrame {
 	            }
 	        }
 	    } else {
-	        JOptionPane.showMessageDialog(contentPane, "No row selected");
+	        JOptionPane.showMessageDialog(contentPane, "No Member selected");
 	    }
 	}
+	
 	}
